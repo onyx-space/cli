@@ -14,6 +14,7 @@ import (
 	"github.com/cli/cli/v2/internal/gh"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	issueShared "github.com/cli/cli/v2/pkg/cmd/issue/shared"
 	prShared "github.com/cli/cli/v2/pkg/cmd/pr/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -205,6 +206,11 @@ func listRun(opts *ListOptions) error {
 		return err
 	}
 	if len(listResult.Issues) == 0 && opts.Exporter == nil {
+		if !isTerminal {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(opts.IO.Out, "issues[0]{number,title,state,author,created}:\n\ncount: 0 of %d\n", listResult.TotalCount)
+			return nil
+		}
 		return prShared.ListNoResults(ghrepo.FullName(baseRepo), "issue", !filterOptions.IsDefault())
 	}
 
@@ -227,7 +233,7 @@ func listRun(opts *ListOptions) error {
 			if !i.CreatedAt.IsZero() {
 				created = i.CreatedAt.Format("2006-01-02")
 			}
-			fmt.Fprintf(opts.IO.Out, "  #%d,%s,%s,%s,%s\n", i.Number, i.Title, i.State, i.Author.Login, created)
+			fmt.Fprintf(opts.IO.Out, "  #%d,%s,%s,%s,%s\n", i.Number, toon.Quote(i.Title), i.State, toon.Quote(i.Author.Login), created)
 		}
 		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(issues), listResult.TotalCount)
 		return nil

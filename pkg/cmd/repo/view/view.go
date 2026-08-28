@@ -14,6 +14,7 @@ import (
 	"github.com/cli/cli/v2/internal/gh"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
 	"github.com/cli/cli/v2/pkg/markdown"
@@ -155,8 +156,8 @@ func viewRun(opts *ViewOptions) error {
 		// TOON (Token-Oriented Object Notation) detail output — AXI contract.
 		// Mirrors gh-axi's `repo view` schema: label + indented key/value lines.
 		fmt.Fprintf(stdout, "repo:\n")
-		fmt.Fprintf(stdout, "  full_name: %s\n", fullName)
-		fmt.Fprintf(stdout, "  description: %s\n", repo.Description)
+		fmt.Fprintf(stdout, "  full_name: %s\n", toon.Quote(fullName))
+		fmt.Fprintf(stdout, "  description: %s\n", toon.Quote(repo.Description))
 		if readme != nil {
 			fmt.Fprintln(stdout, "  readme: (available; content omitted, use --json for full README)")
 		}

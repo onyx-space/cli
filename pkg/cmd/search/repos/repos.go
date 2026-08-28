@@ -9,6 +9,7 @@ import (
 	"github.com/cli/cli/v2/internal/browser"
 	"github.com/cli/cli/v2/internal/tableprinter"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmd/search/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
@@ -147,6 +148,11 @@ func reposRun(opts *ReposOptions) error {
 		return err
 	}
 	if len(result.Items) == 0 && opts.Exporter == nil {
+		if !io.IsStdoutTTY() {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(io.Out, "repos[0]{name,description,stars,forks,language,updated}:\n\ncount: 0 of %d\n", result.Total)
+			return nil
+		}
 		return cmdutil.NewNoResultsError("no repositories matched your search")
 	}
 	if err := io.StartPager(); err == nil {
@@ -156,6 +162,25 @@ func reposRun(opts *ReposOptions) error {
 	}
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(io, result.Items)
+	}
+
+	if !io.IsStdoutTTY() {
+		// TOON array output — AXI contract (mirrors gh-axi's `search repos` schema).
+		items := result.Items
+		fmt.Fprintf(io.Out, "repos[%d]{name,description,stars,forks,language,updated}:\n", len(items))
+		for _, r := range items {
+			updated := ""
+			if !r.UpdatedAt.IsZero() {
+				updated = r.UpdatedAt.Format("2006-01-02")
+			}
+			fmt.Fprintf(io.Out, "  %s,%s,%d,%d,%s,%s\n",
+				toon.Quote(r.FullName),
+				toon.Quote(text.RemoveExcessiveWhitespace(r.Description)),
+				r.StargazersCount, r.ForksCount,
+				toon.Quote(r.Language), updated)
+		}
+		fmt.Fprintf(io.Out, "\ncount: %d of %d\n", len(items), result.Total)
+		return nil
 	}
 
 	return displayResults(io, opts.Now, result)

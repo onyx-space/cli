@@ -14,6 +14,7 @@ import (
 	"github.com/cli/cli/v2/internal/gh"
 	"github.com/cli/cli/v2/internal/tableprinter"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
 )
@@ -195,9 +196,9 @@ func listRun(opts *ListOptions) error {
 				updated = repo.UpdatedAt.Format("2006-01-02")
 			}
 			fmt.Fprintf(opts.IO.Out, "  %s,%s,%s,%s,%d,%s\n",
-				repo.NameWithOwner,
-				text.RemoveExcessiveWhitespace(repo.Description),
-				vis, lang, repo.StargazerCount, updated)
+				toon.Quote(repo.NameWithOwner),
+				toon.Quote(text.RemoveExcessiveWhitespace(repo.Description)),
+				vis, toon.Quote(lang), repo.StargazerCount, updated)
 		}
 		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(repos), listResult.TotalCount)
 		return nil

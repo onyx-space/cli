@@ -15,6 +15,7 @@ import (
 	"github.com/cli/cli/v2/internal/gh"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	issueShared "github.com/cli/cli/v2/pkg/cmd/issue/shared"
 	prShared "github.com/cli/cli/v2/pkg/cmd/pr/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -203,9 +204,9 @@ func printRawIssuePreview(out io.Writer, issue *api.Issue) error {
 	// TOON detail output — AXI contract (mirrors gh-axi's `issue view` schema).
 	fmt.Fprintf(out, "issue:\n")
 	fmt.Fprintf(out, "  number: %d\n", issue.Number)
-	fmt.Fprintf(out, "  title: %s\n", issue.Title)
+	fmt.Fprintf(out, "  title: %s\n", toon.Quote(issue.Title))
 	fmt.Fprintf(out, "  state: %s\n", issue.State)
-	fmt.Fprintf(out, "  author: %s\n", issue.Author.Login)
+	fmt.Fprintf(out, "  author: %s\n", toon.Quote(issue.Author.Login))
 	if !issue.CreatedAt.IsZero() {
 		fmt.Fprintf(out, "  created: %s\n", issue.CreatedAt.Format("2006-01-02"))
 	}
@@ -217,7 +218,7 @@ func printRawIssuePreview(out io.Writer, issue *api.Issue) error {
 		body = body[:500] + "... (truncated, use --json for full body)"
 	}
 	if body != "" {
-		fmt.Fprintf(out, "  body: %s\n", body)
+		fmt.Fprintf(out, "  body: %s\n", toon.Quote(body))
 	}
 	return nil
 }
