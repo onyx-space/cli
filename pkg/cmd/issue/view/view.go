@@ -200,45 +200,25 @@ func viewRun(opts *ViewOptions) error {
 }
 
 func printRawIssuePreview(out io.Writer, issue *api.Issue) error {
-	assignees := issueAssigneeList(*issue)
-	labels := issueLabelList(issue, nil)
-	projects := issueProjectList(*issue)
-
-	// Print empty strings for empty values so the number of metadata lines is consistent when
-	// processing many issues with head and grep.
-	fmt.Fprintf(out, "title:\t%s\n", issue.Title)
-	fmt.Fprintf(out, "state:\t%s\n", issue.State)
-	fmt.Fprintf(out, "author:\t%s\n", issue.Author.DisplayName())
-	fmt.Fprintf(out, "labels:\t%s\n", labels)
-	fmt.Fprintf(out, "comments:\t%d\n", issue.Comments.TotalCount)
-	fmt.Fprintf(out, "assignees:\t%s\n", assignees)
-	fmt.Fprintf(out, "projects:\t%s\n", projects)
-	var milestoneTitle string
-	if issue.Milestone != nil {
-		milestoneTitle = issue.Milestone.Title
+	// TOON detail output — AXI contract (mirrors gh-axi's `issue view` schema).
+	fmt.Fprintf(out, "issue:\n")
+	fmt.Fprintf(out, "  number: %d\n", issue.Number)
+	fmt.Fprintf(out, "  title: %s\n", issue.Title)
+	fmt.Fprintf(out, "  state: %s\n", issue.State)
+	fmt.Fprintf(out, "  author: %s\n", issue.Author.Login)
+	if !issue.CreatedAt.IsZero() {
+		fmt.Fprintf(out, "  created: %s\n", issue.CreatedAt.Format("2006-01-02"))
 	}
-	fmt.Fprintf(out, "milestone:\t%s\n", milestoneTitle)
-	var issueTypeName string
-	if issue.IssueType != nil {
-		issueTypeName = issue.IssueType.Name
+	if issue.IssueType != nil && issue.IssueType.Name != "" {
+		fmt.Fprintf(out, "  type: %s\n", issue.IssueType.Name)
 	}
-	fmt.Fprintf(out, "issue-type:\t%s\n", issueTypeName)
-	var parentRef string
-	if issue.Parent != nil {
-		parentRef = formatLinkedIssueRef(issue.Parent)
+	body := strings.TrimSpace(issue.Body)
+	if len(body) > 500 {
+		body = body[:500] + "... (truncated, use --json for full body)"
 	}
-	fmt.Fprintf(out, "parent:\t%s\n", parentRef)
-	fmt.Fprintf(out, "sub-issues:\t%s\n", formatLinkedIssueRefs(issue.SubIssues.Nodes))
-	var subIssuesCompleted string
-	if issue.SubIssuesSummary.Total > 0 {
-		subIssuesCompleted = fmt.Sprintf("%d/%d", issue.SubIssuesSummary.Completed, issue.SubIssuesSummary.Total)
+	if body != "" {
+		fmt.Fprintf(out, "  body: %s\n", body)
 	}
-	fmt.Fprintf(out, "sub-issues-completed:\t%s\n", subIssuesCompleted)
-	fmt.Fprintf(out, "blocked-by:\t%s\n", formatLinkedIssueRefs(issue.BlockedBy.Nodes))
-	fmt.Fprintf(out, "blocking:\t%s\n", formatLinkedIssueRefs(issue.Blocking.Nodes))
-	fmt.Fprintf(out, "number:\t%d\n", issue.Number)
-	fmt.Fprintln(out, "--")
-	fmt.Fprintln(out, issue.Body)
 	return nil
 }
 

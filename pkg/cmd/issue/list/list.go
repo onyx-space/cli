@@ -127,8 +127,10 @@ var defaultFields = []string{
 	"title",
 	"url",
 	"state",
+	"createdAt",
 	"updatedAt",
 	"labels",
+	"author",
 }
 
 func listRun(opts *ListOptions) error {
@@ -214,6 +216,21 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, listResult.Issues)
+	}
+
+	if !isTerminal {
+		// TOON array output — AXI contract (mirrors gh-axi's `issue list` schema).
+		issues := listResult.Issues
+		fmt.Fprintf(opts.IO.Out, "issues[%d]{number,title,state,author,created}:\n", len(issues))
+		for _, i := range issues {
+			created := ""
+			if !i.CreatedAt.IsZero() {
+				created = i.CreatedAt.Format("2006-01-02")
+			}
+			fmt.Fprintf(opts.IO.Out, "  #%d,%s,%s,%s,%s\n", i.Number, i.Title, i.State, i.Author.Login, created)
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(issues), listResult.TotalCount)
+		return nil
 	}
 
 	if listResult.SearchCapped {
