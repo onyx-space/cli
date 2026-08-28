@@ -7,6 +7,7 @@ import (
 	"github.com/cli/cli/v2/api"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/tableprinter"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmd/workflow/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
@@ -97,6 +98,11 @@ func listRun(opts *ListOptions) error {
 	}
 
 	if len(filteredWorkflows) == 0 {
+		if !opts.IO.IsStdoutTTY() {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(opts.IO.Out, "workflows[0]{id,name,state,path}:\n\ncount: 0 of 0\n")
+			return nil
+		}
 		return cmdutil.NewNoResultsError("no workflows found")
 	}
 
@@ -108,6 +114,17 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, filteredWorkflows)
+	}
+
+	if !opts.IO.IsStdoutTTY() {
+		// TOON array output — AXI contract (mirrors gh-axi's `workflow list` schema).
+		fmt.Fprintf(opts.IO.Out, "workflows[%d]{id,name,state,path}:\n", len(filteredWorkflows))
+		for _, w := range filteredWorkflows {
+			fmt.Fprintf(opts.IO.Out, "  %d,%s,%s,%s\n",
+				w.ID, toon.Quote(w.Name), string(w.State), toon.Quote(w.Path))
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(filteredWorkflows), len(filteredWorkflows))
+		return nil
 	}
 
 	cs := opts.IO.ColorScheme()

@@ -10,6 +10,7 @@ import (
 	"github.com/cli/cli/v2/api"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/tableprinter"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmd/run/shared"
 	workflowShared "github.com/cli/cli/v2/pkg/cmd/workflow/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -147,6 +148,11 @@ func listRun(opts *ListOptions) error {
 	}
 	runs := runsResult.WorkflowRuns
 	if len(runs) == 0 && opts.Exporter == nil {
+		if !opts.IO.IsStdoutTTY() {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(opts.IO.Out, "runs[0]{id,title,status,conclusion,workflow,branch,event,created}:\n\ncount: 0 of 0\n")
+			return nil
+		}
 		return cmdutil.NewNoResultsError("no runs found")
 	}
 
@@ -158,6 +164,24 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, runs)
+	}
+
+	if !opts.IO.IsStdoutTTY() {
+		// TOON array output — AXI contract (mirrors gh-axi's `run list` schema).
+		fmt.Fprintf(opts.IO.Out, "runs[%d]{id,title,status,conclusion,workflow,branch,event,created}:\n", len(runs))
+		for _, run := range runs {
+			created := ""
+			if !run.CreatedAt.IsZero() {
+				created = run.CreatedAt.Format("2006-01-02")
+			}
+			fmt.Fprintf(opts.IO.Out, "  %d,%s,%s,%s,%s,%s,%s,%s\n",
+				run.ID, toon.Quote(run.Title()),
+				string(run.Status), string(run.Conclusion),
+				toon.Quote(run.WorkflowName()), toon.Quote(run.HeadBranch),
+				toon.Quote(run.Event), created)
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(runs), len(runs))
+		return nil
 	}
 
 	tp := tableprinter.New(opts.IO, tableprinter.WithHeader("STATUS", "TITLE", "WORKFLOW", "BRANCH", "EVENT", "ID", "ELAPSED", "AGE"))
