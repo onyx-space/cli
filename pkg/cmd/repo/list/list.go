@@ -114,7 +114,7 @@ func NewCmdList(f *cmdutil.Factory, runF func(*ListOptions) error) *cobra.Comman
 	return cmd
 }
 
-var defaultFields = []string{"nameWithOwner", "description", "isPrivate", "isFork", "isArchived", "createdAt", "pushedAt"}
+var defaultFields = []string{"nameWithOwner", "description", "isPrivate", "isFork", "isArchived", "createdAt", "pushedAt", "primaryLanguage", "stargazerCount", "updatedAt"}
 
 func listRun(opts *ListOptions) error {
 	httpClient, err := opts.HttpClient()
@@ -174,6 +174,33 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, listResult.Repositories)
+	}
+
+	if !opts.IO.IsStdoutTTY() {
+		// TOON array output — AXI contract.
+		// Mirrors gh-axi's `repo list` schema; name uses full owner/name form.
+		repos := listResult.Repositories
+		fmt.Fprintf(opts.IO.Out, "repos[%d]{name,description,visibility,language,stars,updated}:\n", len(repos))
+		for _, repo := range repos {
+			lang := ""
+			if repo.PrimaryLanguage != nil {
+				lang = repo.PrimaryLanguage.Name
+			}
+			vis := "public"
+			if repo.IsPrivate {
+				vis = "private"
+			}
+			updated := ""
+			if !repo.UpdatedAt.IsZero() {
+				updated = repo.UpdatedAt.Format("2006-01-02")
+			}
+			fmt.Fprintf(opts.IO.Out, "  %s,%s,%s,%s,%d,%s\n",
+				repo.NameWithOwner,
+				text.RemoveExcessiveWhitespace(repo.Description),
+				vis, lang, repo.StargazerCount, updated)
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(repos), listResult.TotalCount)
+		return nil
 	}
 
 	cs := opts.IO.ColorScheme()

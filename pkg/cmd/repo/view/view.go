@@ -152,12 +152,13 @@ func viewRun(opts *ViewOptions) error {
 	stdout := opts.IO.Out
 
 	if !opts.IO.IsStdoutTTY() {
-		fmt.Fprintf(stdout, "name:\t%s\n", fullName)
-		fmt.Fprintf(stdout, "description:\t%s\n", repo.Description)
+		// TOON (Token-Oriented Object Notation) detail output — AXI contract.
+		// Mirrors gh-axi's `repo view` schema: label + indented key/value lines.
+		fmt.Fprintf(stdout, "repo:\n")
+		fmt.Fprintf(stdout, "  full_name: %s\n", fullName)
+		fmt.Fprintf(stdout, "  description: %s\n", repo.Description)
 		if readme != nil {
-			fmt.Fprintln(stdout, "--")
-			fmt.Fprint(stdout, readme.Content)
-			fmt.Fprintln(stdout)
+			fmt.Fprintln(stdout, "  readme: (available; content omitted, use --json for full README)")
 		}
 
 		return nil
