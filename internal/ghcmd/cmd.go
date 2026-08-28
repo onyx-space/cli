@@ -69,7 +69,7 @@ func Main() exitCode {
 	}
 	stderr := ioStreams.ErrOut
 
-	ghExecutablePath := executablePath("gh")
+	ghExecutablePath := executablePath("gh-axi")
 
 	additionalCommonDimensions := ghtelemetry.Dimensions{
 		"version":             strings.TrimPrefix(buildVersion, "v"),

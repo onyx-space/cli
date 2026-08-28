@@ -69,13 +69,13 @@ func NewCmdRoot(f *cmdutil.Factory, telemetry ghtelemetry.CommandRecorder, versi
 	}
 
 	cmd := &cobra.Command{
-		Use:   "gh <command> <subcommand> [flags]",
-		Short: "GitHub CLI",
+		Use:   "gh-axi <command> <subcommand> [flags]",
+		Short: "GitHub CLI (AXI fork)",
 		Long:  `Work seamlessly with GitHub from the command line.`,
 		Example: heredoc.Doc(`
-			$ gh issue create
-			$ gh repo clone cli/cli
-			$ gh pr checkout 321
+			$ gh-axi issue create
+			$ gh-axi repo clone cli/cli
+			$ gh-axi pr checkout 321
 		`),
 		Annotations: map[string]string{
 			"versionInfo": versionCmd.Format(version, buildDate),
@@ -107,7 +107,7 @@ func NewCmdRoot(f *cmdutil.Factory, telemetry ghtelemetry.CommandRecorder, versi
 		cmd.SilenceUsage = true
 
 		// this --version flag is checked in rootHelpFunc
-		cmd.Flags().Bool("version", false, "Show gh version")
+		cmd.Flags().Bool("version", false, "Show gh-axi version")
 
 		cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
 			rootHelpFunc(f, c, args)
