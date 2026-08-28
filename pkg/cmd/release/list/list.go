@@ -10,6 +10,7 @@ import (
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/tableprinter"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
 	"github.com/spf13/cobra"
@@ -94,6 +95,11 @@ func listRun(opts *ListOptions) error {
 	}
 
 	if len(releases) == 0 && opts.Exporter == nil {
+		if !opts.IO.IsStdoutTTY() {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(opts.IO.Out, "releases[0]{tag,name,draft,prerelease,published}:\n\ncount: 0 of 0\n")
+			return nil
+		}
 		return cmdutil.NewNoResultsError("no releases found")
 	}
 
@@ -105,6 +111,33 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, releases)
+	}
+
+	if !opts.IO.IsStdoutTTY() {
+		// TOON array output — AXI contract (mirrors gh-axi's `release list` schema).
+		fmt.Fprintf(opts.IO.Out, "releases[%d]{tag,name,draft,prerelease,published}:\n", len(releases))
+		for _, rel := range releases {
+			draft := "no"
+			if rel.IsDraft {
+				draft = "yes"
+			}
+			pre := "no"
+			if rel.IsPrerelease {
+				pre = "yes"
+			}
+			published := ""
+			if !rel.PublishedAt.IsZero() {
+				published = rel.PublishedAt.Format("2006-01-02")
+			}
+			name := rel.Name
+			if name == "" {
+				name = rel.TagName
+			}
+			fmt.Fprintf(opts.IO.Out, "  %s,%s,%s,%s,%s\n",
+				toon.Quote(rel.TagName), toon.Quote(name), draft, pre, published)
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(releases), len(releases))
+		return nil
 	}
 
 	table := tableprinter.New(opts.IO, tableprinter.WithHeader("Title", "Type", "Tag name", "Published"))
