@@ -27,6 +27,14 @@ endif
 clean: script/build$(EXE)
 	@$< $@
 
+## gh-axi fork targets (TOON output build)
+.PHONY: build-axi install-axi
+build-axi:
+	@script/build-axi.sh
+
+install-axi:
+	@script/build-axi.sh --install
+
 .PHONY: manpages
 manpages: script/build$(EXE)
 	@$< $@
