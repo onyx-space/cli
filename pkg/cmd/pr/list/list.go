@@ -14,6 +14,7 @@ import (
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/tableprinter"
 	"github.com/cli/cli/v2/internal/text"
+	"github.com/cli/cli/v2/internal/toon"
 	"github.com/cli/cli/v2/pkg/cmd/pr/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
@@ -140,6 +141,8 @@ var defaultFields = []string{
 	"isCrossRepository",
 	"isDraft",
 	"createdAt",
+	"author",
+	"reviewDecision",
 }
 
 func listRun(opts *ListOptions) error {
@@ -201,6 +204,11 @@ func listRun(opts *ListOptions) error {
 		return err
 	}
 	if len(listResult.PullRequests) == 0 && opts.Exporter == nil {
+		if !opts.IO.IsStdoutTTY() {
+			// R4 empty-state contract: well-formed empty TOON, exit 0.
+			fmt.Fprintf(opts.IO.Out, "prs[0]{number,title,state,author,draft,review}:\n\ncount: 0 of %d\n", listResult.TotalCount)
+			return nil
+		}
 		return shared.ListNoResults(ghrepo.FullName(baseRepo), "pull request", !filters.IsDefault())
 	}
 
@@ -212,6 +220,23 @@ func listRun(opts *ListOptions) error {
 
 	if opts.Exporter != nil {
 		return opts.Exporter.Write(opts.IO, listResult.PullRequests)
+	}
+
+	if !opts.IO.IsStdoutTTY() {
+		// TOON array output — AXI contract (mirrors gh-axi's `pr list` schema).
+		prs := listResult.PullRequests
+		fmt.Fprintf(opts.IO.Out, "prs[%d]{number,title,state,author,draft,review}:\n", len(prs))
+		for _, p := range prs {
+			draft := "no"
+			if p.IsDraft {
+				draft = "yes"
+			}
+			fmt.Fprintf(opts.IO.Out, "  #%d,%s,%s,%s,%s,%s\n",
+				p.Number, toon.Quote(p.Title), p.State,
+				toon.Quote(p.Author.Login), draft, reviewLabel(p.ReviewDecision))
+		}
+		fmt.Fprintf(opts.IO.Out, "\ncount: %d of %d\n", len(prs), listResult.TotalCount)
+		return nil
 	}
 
 	if listResult.SearchCapped {
@@ -257,4 +282,19 @@ func listRun(opts *ListOptions) error {
 	}
 
 	return nil
+}
+
+// reviewLabel maps a GitHub reviewDecision to the short label used by the TS
+// gh-axi `pr list` schema (REVIEW_MAP).
+func reviewLabel(d string) string {
+	switch d {
+	case "APPROVED":
+		return "approved"
+	case "CHANGES_REQUESTED":
+		return "changes_requested"
+	case "REVIEW_REQUIRED":
+		return "required"
+	default:
+		return "none"
+	}
 }

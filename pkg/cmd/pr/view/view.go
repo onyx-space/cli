@@ -13,7 +13,8 @@ import (
 	fd "github.com/cli/cli/v2/internal/featuredetection"
 	"github.com/cli/cli/v2/internal/ghrepo"
 	"github.com/cli/cli/v2/internal/text"
-	"github.com/cli/cli/v2/pkg/cmd/pr/shared"
+	"github.com/cli/cli/v2/internal/toon"
+	shared "github.com/cli/cli/v2/pkg/cmd/pr/shared"
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/cli/cli/v2/pkg/iostreams"
 	"github.com/cli/cli/v2/pkg/markdown"
@@ -145,42 +146,32 @@ func viewRun(opts *ViewOptions) error {
 
 func printRawPrPreview(io *iostreams.IOStreams, pr *api.PullRequest) error {
 	out := io.Out
-	cs := io.ColorScheme()
-
-	reviewers := prReviewerList(*pr, cs)
-	assignees := prAssigneeList(*pr)
-	labels := prLabelList(*pr, cs)
-	projects := prProjectList(*pr)
-
-	fmt.Fprintf(out, "title:\t%s\n", pr.Title)
-	fmt.Fprintf(out, "state:\t%s\n", prStateWithDraft(pr))
-	fmt.Fprintf(out, "author:\t%s\n", pr.Author.DisplayName())
-	fmt.Fprintf(out, "labels:\t%s\n", labels)
-	fmt.Fprintf(out, "assignees:\t%s\n", assignees)
-	fmt.Fprintf(out, "reviewers:\t%s\n", reviewers)
-	fmt.Fprintf(out, "projects:\t%s\n", projects)
-	var milestoneTitle string
-	if pr.Milestone != nil {
-		milestoneTitle = pr.Milestone.Title
+	// TOON detail output — AXI contract (mirrors gh-axi's `pr view` schema).
+	fmt.Fprintf(out, "pr:\n")
+	fmt.Fprintf(out, "  number: %d\n", pr.Number)
+	fmt.Fprintf(out, "  title: %s\n", toon.Quote(pr.Title))
+	fmt.Fprintf(out, "  state: %s\n", prStateWithDraft(pr))
+	fmt.Fprintf(out, "  author: %s\n", toon.Quote(pr.Author.Login))
+	draft := "no"
+	if pr.IsDraft {
+		draft = "yes"
 	}
-	fmt.Fprintf(out, "milestone:\t%s\n", milestoneTitle)
-	fmt.Fprintf(out, "number:\t%d\n", pr.Number)
-	fmt.Fprintf(out, "url:\t%s\n", pr.URL)
-	fmt.Fprintf(out, "additions:\t%s\n", cs.Green(strconv.Itoa(pr.Additions)))
-	fmt.Fprintf(out, "deletions:\t%s\n", cs.Red(strconv.Itoa(pr.Deletions)))
-	var autoMerge string
-	if pr.AutoMergeRequest == nil {
-		autoMerge = "disabled"
-	} else {
-		autoMerge = fmt.Sprintf("enabled\t%s\t%s",
-			pr.AutoMergeRequest.EnabledBy.Login,
-			strings.ToLower(pr.AutoMergeRequest.MergeMethod))
+	fmt.Fprintf(out, "  draft: %s\n", draft)
+	merged := "no"
+	if pr.State == "MERGED" {
+		merged = "yes"
+		if pr.MergedAt != nil && !pr.MergedAt.IsZero() {
+			merged = pr.MergedAt.Format("2006-01-02")
+		}
 	}
-	fmt.Fprintf(out, "auto-merge:\t%s\n", autoMerge)
-
-	fmt.Fprintln(out, "--")
-	fmt.Fprintln(out, pr.Body)
-
+	fmt.Fprintf(out, "  merged: %s\n", merged)
+	body := strings.TrimSpace(pr.Body)
+	if len(body) > 500 {
+		body = body[:500] + "... (truncated, use --json for full body)"
+	}
+	if body != "" {
+		fmt.Fprintf(out, "  body: %s\n", toon.Quote(body))
+	}
 	return nil
 }
 
