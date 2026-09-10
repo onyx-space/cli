@@ -1,3 +1,7 @@
+# requires-user-capability: true
+
+fixture-repo none
+
 # Gists are owned by the authenticated user rather than an org, so unlike most
 # other acceptance scripts there is no repository to create or clean up.
 #
