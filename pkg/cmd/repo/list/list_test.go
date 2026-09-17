@@ -415,9 +415,12 @@ func TestRepoList_nontty(t *testing.T) {
 	assert.Equal(t, "", stderr.String())
 
 	assert.Equal(t, heredoc.Doc(`
-		octocat/hello-world	My first repository	public	2021-02-19T06:34:58Z
-		octocat/cli	GitHub CLI	public, fork	2021-02-19T06:06:06Z
-		octocat/testing		private	2021-02-11T22:32:05Z
+		repos[3]{name,description,visibility,language,stars,updated}:
+		  octocat/hello-world,My first repository,public,,0,
+		  octocat/cli,GitHub CLI,public,,0,
+		  octocat/testing,,private,,0,
+
+		count: 3 of 3
 	`), stdout.String())
 }
 
@@ -525,7 +528,12 @@ func TestRepoList_noVisibilityField(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "", stderr.String())
-	assert.Equal(t, "", stdout.String())
+	// This fork emits a well-formed empty TOON state instead of nothing.
+	assert.Equal(t, heredoc.Doc(`
+		repos[0]{name,description,visibility,language,stars,updated}:
+
+		count: 0 of 0
+	`), stdout.String())
 }
 
 func TestRepoList_invalidOwner(t *testing.T) {

@@ -208,7 +208,7 @@ func TestReposRun(t *testing.T) {
 					},
 				},
 			},
-			wantStdout: "test/cli\tof course\tprivate, archived\t2021-02-28T12:30:00Z\ntest/cliing\twow\tpublic, fork\t2021-02-28T12:30:00Z\ncli/cli\tso much\tinternal\t2021-02-28T12:30:00Z\n",
+			wantStdout: "repos[3]{name,description,stars,forks,language,updated}:\n  test/cli,of course,0,0,,2021-02-28\n  test/cliing,wow,0,0,,2021-02-28\n  cli/cli,so much,0,0,,2021-02-28\n\ncount: 3 of 300\n",
 		},
 		{
 			name: "displays no results",
@@ -220,8 +220,8 @@ func TestReposRun(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
-			errMsg:  "no repositories matched your search",
+			// Non-TTY empty results are a well-formed empty TOON state, not an error.
+			wantStdout: "repos[0]{name,description,stars,forks,language,updated}:\n\ncount: 0 of 0\n",
 		},
 		{
 			name: "displays search error",
