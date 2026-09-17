@@ -295,10 +295,13 @@ func Test_listRun(t *testing.T) {
 			},
 			httpStubs: httpStubsWithoutImmutableReleases(frozenTime),
 			wantStdout: heredoc.Doc(`
-				v1.1.0	Draft	v1.1.0	2020-08-31T15:44:24+02:00
-				The big 1.0	Latest	v1.0.0	2020-08-31T15:44:24+02:00
-				1.0 release candidate	Pre-release	v1.0.0-pre.2	2020-08-31T15:44:24+02:00
-				New features		v0.9.2	2020-08-31T15:44:24+02:00
+				releases[4]{tag,name,draft,prerelease,published}:
+				  v1.1.0,v1.1.0,yes,no,2020-08-31
+				  v1.0.0,The big 1.0,no,no,2020-08-31
+				  v1.0.0-pre.2,1.0 release candidate,no,yes,2020-08-31
+				  v0.9.2,New features,no,no,2020-08-31
+
+				count: 4 of 4
 			`),
 			wantStderr: ``,
 		},
@@ -311,10 +314,13 @@ func Test_listRun(t *testing.T) {
 			},
 			httpStubs: httpStubs(frozenTime),
 			wantStdout: heredoc.Doc(`
-				v1.1.0	Draft	v1.1.0	2020-08-31T15:44:24+02:00
-				The big 1.0	Latest	v1.0.0	2020-08-31T15:44:24+02:00
-				1.0 release candidate	Pre-release	v1.0.0-pre.2	2020-08-31T15:44:24+02:00
-				New features		v0.9.2	2020-08-31T15:44:24+02:00
+				releases[4]{tag,name,draft,prerelease,published}:
+				  v1.1.0,v1.1.0,yes,no,2020-08-31
+				  v1.0.0,The big 1.0,no,no,2020-08-31
+				  v1.0.0-pre.2,1.0 release candidate,no,yes,2020-08-31
+				  v0.9.2,New features,no,no,2020-08-31
+
+				count: 4 of 4
 			`),
 			wantStderr: ``,
 		},

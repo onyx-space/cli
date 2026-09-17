@@ -120,7 +120,7 @@ func TestListRun(t *testing.T) {
 			opts: &ListOptions{
 				Limit: defaultLimit,
 			},
-			wantOut: "Go\tactive\t707\nLinter\tactive\t666\n",
+			wantOut: "workflows[2]{id,name,state,path}:\n  707,Go,active,\n  666,Linter,active,\n\ncount: 2 of 2\n",
 		},
 		{
 			name: "lists workflows tty",
@@ -158,7 +158,8 @@ func TestListRun(t *testing.T) {
 					httpmock.JSONResponse(shared.WorkflowsPayload{}),
 				)
 			},
-			wantErr: true,
+			// Non-TTY empty results are a well-formed empty TOON state, not an error.
+			wantOut: "workflows[0]{id,name,state,path}:\n\ncount: 0 of 0\n",
 		},
 		{
 			name: "paginates workflows nontty",
@@ -186,7 +187,7 @@ func TestListRun(t *testing.T) {
 						Workflows: workflows[100:],
 					}))
 			},
-			wantOut: longOutput,
+			wantOut: longOutputTOON(101),
 		},
 	}
 
@@ -228,4 +229,11 @@ func TestListRun(t *testing.T) {
 	}
 }
 
-const longOutput = "flow 0\tactive\t0\nflow 1\tactive\t1\nflow 2\tactive\t2\nflow 3\tactive\t3\nflow 4\tactive\t4\nflow 5\tactive\t5\nflow 6\tactive\t6\nflow 7\tactive\t7\nflow 8\tactive\t8\nflow 9\tactive\t9\nflow 10\tactive\t10\nflow 11\tactive\t11\nflow 12\tactive\t12\nflow 13\tactive\t13\nflow 14\tactive\t14\nflow 15\tactive\t15\nflow 16\tactive\t16\nflow 17\tactive\t17\nflow 18\tactive\t18\nflow 19\tactive\t19\nflow 20\tactive\t20\nflow 21\tactive\t21\nflow 22\tactive\t22\nflow 23\tactive\t23\nflow 24\tactive\t24\nflow 25\tactive\t25\nflow 26\tactive\t26\nflow 27\tactive\t27\nflow 28\tactive\t28\nflow 29\tactive\t29\nflow 30\tactive\t30\nflow 31\tactive\t31\nflow 32\tactive\t32\nflow 33\tactive\t33\nflow 34\tactive\t34\nflow 35\tactive\t35\nflow 36\tactive\t36\nflow 37\tactive\t37\nflow 38\tactive\t38\nflow 39\tactive\t39\nflow 40\tactive\t40\nflow 41\tactive\t41\nflow 42\tactive\t42\nflow 43\tactive\t43\nflow 44\tactive\t44\nflow 45\tactive\t45\nflow 46\tactive\t46\nflow 47\tactive\t47\nflow 48\tactive\t48\nflow 49\tactive\t49\nflow 50\tactive\t50\nflow 51\tactive\t51\nflow 52\tactive\t52\nflow 53\tactive\t53\nflow 54\tactive\t54\nflow 55\tactive\t55\nflow 56\tactive\t56\nflow 57\tactive\t57\nflow 58\tactive\t58\nflow 59\tactive\t59\nflow 60\tactive\t60\nflow 61\tactive\t61\nflow 62\tactive\t62\nflow 63\tactive\t63\nflow 64\tactive\t64\nflow 65\tactive\t65\nflow 66\tactive\t66\nflow 67\tactive\t67\nflow 68\tactive\t68\nflow 69\tactive\t69\nflow 70\tactive\t70\nflow 71\tactive\t71\nflow 72\tactive\t72\nflow 73\tactive\t73\nflow 74\tactive\t74\nflow 75\tactive\t75\nflow 76\tactive\t76\nflow 77\tactive\t77\nflow 78\tactive\t78\nflow 79\tactive\t79\nflow 80\tactive\t80\nflow 81\tactive\t81\nflow 82\tactive\t82\nflow 83\tactive\t83\nflow 84\tactive\t84\nflow 85\tactive\t85\nflow 86\tactive\t86\nflow 87\tactive\t87\nflow 88\tactive\t88\nflow 89\tactive\t89\nflow 90\tactive\t90\nflow 91\tactive\t91\nflow 92\tactive\t92\nflow 93\tactive\t93\nflow 94\tactive\t94\nflow 95\tactive\t95\nflow 96\tactive\t96\nflow 97\tactive\t97\nflow 98\tactive\t98\nflow 99\tactive\t99\nflow 100\tactive\t100\n"
+// longOutputTOON builds the TOON output for the pagination test: 101 workflows.
+func longOutputTOON(n int) string {
+	out := fmt.Sprintf("workflows[%d]{id,name,state,path}:\n", n)
+	for i := range n {
+		out += fmt.Sprintf("  %d,flow %d,active,\n", i, i)
+	}
+	return out + fmt.Sprintf("\ncount: %d of %d\n", n, n)
+}

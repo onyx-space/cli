@@ -132,11 +132,14 @@ func TestIssueList_nontty(t *testing.T) {
 	}
 
 	assert.Equal(t, "", output.Stderr())
+	// This fork emits TOON for non-TTY output instead of the upstream table.
 	//nolint:staticcheck // prefer exact matchers over ExpectLines
 	test.ExpectLines(t, output.String(),
-		`1[\t]+number won[\t]+label[\t]+\d+`,
-		`2[\t]+number too[\t]+label[\t]+\d+`,
-		`4[\t]+number fore[\t]+label[\t]+\d+`)
+		`issues\[3\]\{number,title,state,author,created\}:`,
+		`#1,number won,,,`,
+		`#2,number too,,,`,
+		`#4,number fore,,,`,
+		`count: 3 of 3`)
 }
 
 func TestIssueList_tty(t *testing.T) {

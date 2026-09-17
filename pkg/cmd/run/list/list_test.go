@@ -354,16 +354,19 @@ func TestListRun(t *testing.T) {
 					}))
 			},
 			wantOut: heredoc.Doc(`
-				completed	timed_out	cool commit	CI	trunk	push	1	4m34s	2021-02-23T04:51:00Z
-				in_progress		cool commit	CI	trunk	push	2	4m34s	2021-02-23T04:51:00Z
-				completed	success	cool commit	CI	trunk	push	3	4m34s	2021-02-23T04:51:00Z
-				completed	cancelled	cool commit	CI	trunk	push	4	4m34s	2021-02-23T04:51:00Z
-				completed	failure	cool commit	CI	trunk	push	1234	4m34s	2021-02-23T04:51:00Z
-				completed	neutral	cool commit	CI	trunk	push	6	4m34s	2021-02-23T04:51:00Z
-				completed	skipped	cool commit	CI	trunk	push	7	4m34s	2021-02-23T04:51:00Z
-				requested		cool commit	CI	trunk	push	8	4m34s	2021-02-23T04:51:00Z
-				queued		cool commit	CI	trunk	push	9	4m34s	2021-02-23T04:51:00Z
-				completed	stale	cool commit	CI	trunk	push	10	4m34s	2021-02-23T04:51:00Z
+				runs[10]{id,title,status,conclusion,workflow,branch,event,created}:
+				  1,cool commit,completed,timed_out,CI,trunk,push,2021-02-23
+				  2,cool commit,in_progress,,CI,trunk,push,2021-02-23
+				  3,cool commit,completed,success,CI,trunk,push,2021-02-23
+				  4,cool commit,completed,cancelled,CI,trunk,push,2021-02-23
+				  1234,cool commit,completed,failure,CI,trunk,push,2021-02-23
+				  6,cool commit,completed,neutral,CI,trunk,push,2021-02-23
+				  7,cool commit,completed,skipped,CI,trunk,push,2021-02-23
+				  8,cool commit,requested,,CI,trunk,push,2021-02-23
+				  9,cool commit,queued,,CI,trunk,push,2021-02-23
+				  10,cool commit,completed,stale,CI,trunk,push,2021-02-23
+
+				count: 10 of 10
 			`),
 		},
 		{
@@ -552,8 +555,12 @@ func TestListRun(t *testing.T) {
 					httpmock.JSONResponse(shared.RunsPayload{}),
 				)
 			},
-			wantErr:    true,
-			wantErrMsg: "no runs found",
+			// Non-TTY empty results are a well-formed empty TOON state, not an error.
+			wantOut: heredoc.Doc(`
+				runs[0]{id,title,status,conclusion,workflow,branch,event,created}:
+
+				count: 0 of 0
+			`),
 		},
 		{
 			name: "workflow selector",
@@ -594,8 +601,12 @@ func TestListRun(t *testing.T) {
 					httpmock.JSONResponse(shared.RunsPayload{}),
 				)
 			},
-			wantErr:    true,
-			wantErrMsg: "no runs found",
+			// Non-TTY empty results are a well-formed empty TOON state, not an error.
+			wantOut: heredoc.Doc(`
+				runs[0]{id,title,status,conclusion,workflow,branch,event,created}:
+
+				count: 0 of 0
+			`),
 		},
 		{
 			name: "actor filter applied",
@@ -611,8 +622,12 @@ func TestListRun(t *testing.T) {
 					httpmock.JSONResponse(shared.RunsPayload{}),
 				)
 			},
-			wantErr:    true,
-			wantErrMsg: "no runs found",
+			// Non-TTY empty results are a well-formed empty TOON state, not an error.
+			wantOut: heredoc.Doc(`
+				runs[0]{id,title,status,conclusion,workflow,branch,event,created}:
+
+				count: 0 of 0
+			`),
 		},
 		{
 			name: "status filter applied",

@@ -165,13 +165,13 @@ func TestIssueView_nontty_Preview(t *testing.T) {
 				mockEmptyV2ProjectItems(t, r)
 			},
 			expectedOutputs: []string{
-				`title:\tix of coins`,
-				`state:\tOPEN`,
-				`comments:\t9`,
-				`author:\tmarseilles`,
-				`assignees:`,
-				`number:\t123\n`,
-				`\*\*bold story\*\*`,
+				`issue:`,
+				`number: 123`,
+				`title: ix of coins`,
+				`state: OPEN`,
+				`author: marseilles`,
+				`created: \d{4}-\d{2}-\d{2}`,
+				`body: \*\*bold story\*\*`,
 			},
 		},
 		"Open issue with metadata": {
@@ -180,16 +180,13 @@ func TestIssueView_nontty_Preview(t *testing.T) {
 				mockV2ProjectItems(t, r)
 			},
 			expectedOutputs: []string{
-				`title:\tix of coins`,
-				`assignees:\tmarseilles, monaco`,
-				`author:\tmarseilles`,
-				`state:\tOPEN`,
-				`comments:\t9`,
-				`labels:\tClosed: Duplicate, Closed: Won't Fix, help wanted, Status: In Progress, Type: Bug`,
-				`projects:\tv2 Project 1 \(No Status\), v2 Project 2 \(Done\), Project 1 \(column A\), Project 2 \(column B\), Project 3 \(column C\), Project 4 \(Awaiting triage\)\n`,
-				`milestone:\tuluru\n`,
-				`number:\t123\n`,
-				`\*\*bold story\*\*`,
+				`issue:`,
+				`number: 123`,
+				`title: ix of coins`,
+				`state: OPEN`,
+				`author: marseilles`,
+				`created: \d{4}-\d{2}-\d{2}`,
+				`body: \*\*bold story\*\*`,
 			},
 		},
 		"Open issue with empty body": {
@@ -198,11 +195,12 @@ func TestIssueView_nontty_Preview(t *testing.T) {
 				mockEmptyV2ProjectItems(t, r)
 			},
 			expectedOutputs: []string{
-				`title:\tix of coins`,
-				`state:\tOPEN`,
-				`author:\tmarseilles`,
-				`labels:\ttarot`,
-				`number:\t123\n`,
+				`issue:`,
+				`number: 123`,
+				`title: ix of coins`,
+				`state: OPEN`,
+				`author: marseilles`,
+				`created: \d{4}-\d{2}-\d{2}`,
 			},
 		},
 		"Closed issue": {
@@ -211,13 +209,11 @@ func TestIssueView_nontty_Preview(t *testing.T) {
 				mockEmptyV2ProjectItems(t, r)
 			},
 			expectedOutputs: []string{
-				`title:\tix of coins`,
-				`state:\tCLOSED`,
-				`\*\*bold story\*\*`,
-				`author:\tmarseilles`,
-				`labels:\ttarot`,
-				`number:\t123\n`,
-				`\*\*bold story\*\*`,
+				`title: ix of coins`,
+				`state: CLOSED`,
+				`author: marseilles`,
+				`created: 2011-01-26`,
+				`body: \*\*bold story\*\*`,
 			},
 		},
 	}
@@ -483,12 +479,13 @@ func TestIssueView_nontty_Comments(t *testing.T) {
 				mockEmptyV2ProjectItems(t, r)
 			},
 			expectedOutputs: []string{
-				`title:\tsome title`,
-				`state:\tOPEN`,
-				`author:\tmarseilles`,
-				`comments:\t6`,
-				`number:\t123`,
-				`some body`,
+				`issue:`,
+				`number: 123`,
+				`title: some title`,
+				`state: OPEN`,
+				`author: marseilles`,
+				`created: 2020-01-01`,
+				`body: some body`,
 			},
 		},
 		"with comments flag": {
@@ -827,12 +824,13 @@ func TestIssueView_nontty_Issues2AllFields(t *testing.T) {
 
 	out := stdout.String()
 
-	assert.Contains(t, out, "issue-type:\tBug\n")
-	assert.Contains(t, out, "parent:\tOWNER/REPO#100\n")
-	assert.Contains(t, out, "sub-issues:\tOWNER/REPO#101, OWNER/REPO#102\n")
-	assert.Contains(t, out, "sub-issues-completed:\t1/2\n")
-	assert.Contains(t, out, "blocked-by:\tOWNER/REPO#200\n")
-	assert.Contains(t, out, "blocking:\tOWNER/REPO#300\n")
+	// The TOON schema for `issue view` carries the issue type but not the
+	// linked-issue metadata (parent / sub-issues / blocked-by / blocking).
+	assert.Contains(t, out, "type: Bug\n")
+	assert.NotContains(t, out, "parent:")
+	assert.NotContains(t, out, "sub-issues")
+	assert.NotContains(t, out, "blocked-by:")
+	assert.NotContains(t, out, "blocking:")
 }
 
 func TestIssueView_tty_Issues2NoFields(t *testing.T) {
@@ -921,14 +919,16 @@ func TestIssueView_nontty_Issues2NoFields(t *testing.T) {
 
 	out := stdout.String()
 
-	// Issues 2.0 keys appear with empty values to keep line counts stable
-	// for `head | grep` workflows.
-	assert.Contains(t, out, "issue-type:\t\n")
-	assert.Contains(t, out, "parent:\t\n")
-	assert.Contains(t, out, "sub-issues:\t\n")
-	assert.Contains(t, out, "sub-issues-completed:\t\n")
-	assert.Contains(t, out, "blocked-by:\t\n")
-	assert.Contains(t, out, "blocking:\t\n")
+	// TOON output omits optional fields that have no value instead of
+	// emitting empty placeholders, so no Issues 2.0 key may appear.
+	assert.Contains(t, out, "issue:\n")
+	assert.Contains(t, out, "number: 456\n")
+	assert.Contains(t, out, "state: OPEN\n")
+	assert.NotContains(t, out, "type:")
+	assert.NotContains(t, out, "parent:")
+	assert.NotContains(t, out, "sub-issues")
+	assert.NotContains(t, out, "blocked-by:")
+	assert.NotContains(t, out, "blocking:")
 }
 
 func TestIssueView_json_IssueType(t *testing.T) {

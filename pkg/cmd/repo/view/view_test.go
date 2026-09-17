@@ -242,10 +242,10 @@ func Test_ViewRun(t *testing.T) {
 		{
 			name: "nontty",
 			wantOut: heredoc.Doc(`
-				name:	OWNER/REPO
-				description:	social distancing
-				--
-				# truly cool readme check it out
+				repo:
+				  full_name: OWNER/REPO
+				  description: social distancing
+				  readme: (available; content omitted, use --json for full README)
 				`),
 		},
 		{
@@ -389,10 +389,10 @@ func Test_ViewRun_NonMarkdownReadme(t *testing.T) {
 		{
 			name: "nontty",
 			wantOut: heredoc.Doc(`
-			name:	OWNER/REPO
-			description:	social distancing
-			--
-			# truly cool readme check it out
+			repo:
+			  full_name: OWNER/REPO
+			  description: social distancing
+			  readme: (available; content omitted, use --json for full README)
 			`),
 		},
 	}
@@ -459,8 +459,9 @@ func Test_ViewRun_NoReadme(t *testing.T) {
 		{
 			name: "nontty",
 			wantOut: heredoc.Doc(`
-			name:	OWNER/REPO
-			description:	social distancing
+			repo:
+			  full_name: OWNER/REPO
+			  description: social distancing
 			`),
 		},
 	}
@@ -525,10 +526,10 @@ func Test_ViewRun_NoDescription(t *testing.T) {
 		{
 			name: "nontty",
 			wantOut: heredoc.Doc(`
-			name:	OWNER/REPO
-			description:	
-			--
-			# truly cool readme check it out
+			repo:
+			  full_name: OWNER/REPO
+			  description: 
+			  readme: (available; content omitted, use --json for full README)
 			`),
 		},
 	}
@@ -614,10 +615,10 @@ func Test_ViewRun_WithoutUsername(t *testing.T) {
 	}
 
 	assert.Equal(t, heredoc.Doc(`
-			name:	OWNER/REPO
-			description:	social distancing
-			--
-			# truly cool readme check it out
+			repo:
+			  full_name: OWNER/REPO
+			  description: social distancing
+			  readme: (available; content omitted, use --json for full README)
 			`), stdout.String())
 	assert.Equal(t, "", stderr.String())
 	reg.Verify(t)
@@ -636,10 +637,10 @@ func Test_ViewRun_HandlesSpecialCharacters(t *testing.T) {
 		{
 			name: "nontty",
 			wantOut: heredoc.Doc(`
-				name:	OWNER/REPO
-				description:	Some basic special characters " & / < > '
-				--
-				# < is always > than & ' and "
+				repo:
+				  full_name: OWNER/REPO
+				  description: "Some basic special characters \" & / < > '"
+				  readme: (available; content omitted, use --json for full README)
 				`),
 		},
 		{

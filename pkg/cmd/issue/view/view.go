@@ -343,12 +343,6 @@ func formatLinkedIssueRef(issue *api.LinkedIssue) string {
 	return fmt.Sprintf("%s#%d", issue.Repository.NameWithOwner, issue.Number)
 }
 
-// formatLinkedIssueRefs formats a comma-separated list of linked issue
-// references without titles.
-func formatLinkedIssueRefs(issues []api.LinkedIssue) string {
-	return joinLinkedIssues(issues, false)
-}
-
 // formatLinkedIssueListWithTitle formats a comma-separated list of linked
 // issue references with each title appended after the reference.
 func formatLinkedIssueListWithTitle(issues []api.LinkedIssue) string {

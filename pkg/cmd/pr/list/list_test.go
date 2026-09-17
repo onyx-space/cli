@@ -110,9 +110,13 @@ func TestPRList_nontty(t *testing.T) {
 
 	assert.Equal(t, "", output.Stderr())
 
-	assert.Equal(t, `32	New feature	feature	DRAFT	2022-08-24T20:01:12Z
-29	Fixed bad bug	hubot:bug-fix	OPEN	2022-07-20T19:01:12Z
-28	Improve documentation	docs	MERGED	2020-01-26T19:01:12Z
+	// Non-TTY output is TOON in this fork.
+	assert.Equal(t, `prs[3]{number,title,state,author,draft,review}:
+  #32,New feature,OPEN,,yes,none
+  #29,Fixed bad bug,OPEN,,no,none
+  #28,Improve documentation,MERGED,,no,none
+
+count: 3 of 3
 `, output.String())
 }
 
